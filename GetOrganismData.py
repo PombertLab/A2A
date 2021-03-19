@@ -4,8 +4,8 @@ from sys import exit,argv
 import re
 
 name = "GetOrganismData.py"
-version = "0.2b"
-updated = "3/14/21	Changed output directory name to match DB name"
+version = "0.3"
+updated = "3/18/21	Updated to-download file/reduced webpage wait-time"
 
 usage = f"""\n
 NAME        {name}
@@ -75,31 +75,31 @@ driver = webdriver.Firefox(options=options)
 ## Open the NCBI genome database
 driver.get("https://ftp.ncbi.nlm.nih.gov/genomes/refseq/")
 
-data = ["_genomic.fna.gz","_protein.faa.gz","rna_from_genomic.fna.gz","_feature_table.txt.gz","_assembly_report.txt"]
+data = ["_genomic.fna.gz","_protein.faa.gz","_rna_from_genomic.fna.gz","_feature_table.txt.gz","_assembly_report.txt"]
 
 ## Search for the kingdom specified
 try:
-	WebDriverWait(driver,60).until(EC.presence_of_element_located((By.LINK_TEXT,kingdom+"/"))).click()
+	WebDriverWait(driver,20).until(EC.presence_of_element_located((By.LINK_TEXT,kingdom+"/"))).click()
 except:
 	print("[E] The kingdom you are searching for does not exist in the NCBI database.\n")
 	driver.quit()
 
 ## Search for the organism specifed
 try:
-	WebDriverWait(driver,60).until(EC.presence_of_element_located((By.LINK_TEXT,genus+"_"+species+"/"))).click()
+	WebDriverWait(driver,20).until(EC.presence_of_element_located((By.LINK_TEXT,genus+"_"+species+"/"))).click()
 except:
 	print("[E] Either the organism you are searching for does not exist in the NCBI database or connection to the NCBI database failed.\n")
 	driver.quit()
 
 ## Navigate to the most recent version
 try:
-	WebDriverWait(driver,60).until(EC.presence_of_element_located((By.LINK_TEXT,"latest_assembly_versions/"))).click()
+	WebDriverWait(driver,20).until(EC.presence_of_element_located((By.LINK_TEXT,"latest_assembly_versions/"))).click()
 except:
 	driver.quit()
 
 ## Enter the database for the organism
 try:
-	WebDriverWait(driver,60).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,"GCF"))).click()
+	WebDriverWait(driver,20).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,"GCF"))).click()
 except:
 	driver.quit()
 
@@ -107,7 +107,7 @@ assembly_version = (driver.title).split("/")[-1]
 
 for key in data:
 	key = assembly_version + key
-	download = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,key))).get_attribute('href')
+	download = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,key))).get_attribute('href')
 	info = str(download).split("/")
 	system(f"wget {download} -O {odir}/{info[-1]}")
 	regex = re.compile(".gz")
