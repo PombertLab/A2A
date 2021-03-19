@@ -75,7 +75,7 @@ driver = webdriver.Firefox(options=options)
 ## Open the NCBI genome database
 driver.get("https://ftp.ncbi.nlm.nih.gov/genomes/refseq/")
 
-data = ["_genomic.fna.gz","_protein.faa.gz","_rna.fna.gz","_feature_table.txt.gz","_assembly_report.txt"]
+data = ["_genomic.fna.gz","_protein.faa.gz","rna_from_genomic.fna.gz","_feature_table.txt.gz","_assembly_report.txt"]
 
 ## Search for the kingdom specified
 try:
