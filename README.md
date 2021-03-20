@@ -29,6 +29,7 @@ The A2A pipeline takes a user through the process of cleaning an assembly, orien
 	- [Selenium](https://pypi.org/project/selenium/)
 	- [arrow](https://pypi.org/project/arrow/)
 	- [apollo](https://python-apollo.readthedocs.io/en/latest/README.html)
+- [Python3-devel](https://pkgs.org/download/python3-devel)
 - [Apollo](https://genomearchitect.readthedocs.io/en/latest/)
 
 ## Pipeline Process
