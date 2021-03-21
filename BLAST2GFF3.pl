@@ -3,21 +3,23 @@
 use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
 
 my $name = 'Blast2GFF3.pl';
-my $version = '0.3';
-my $update = '2/10/2021';
+my $version = '0.3a';
+my $update = '3/21/2021';
 
 my $usage = <<"EXIT";
 
 NAME		${name}
 VERSION		${version}
-SYNOPSIS	This script converts the output of a (t)blastn.6 file to GFF3 format for loading into apollo 
+SYNOPSIS	This script converts the output of a (t)blastn.6 file to GFF3 format for loading into Apollo (https://github.com/GMOD/Apollo) 
 
-COMMAND		blast2gff3.pl -i *.(t)blast(n).6 -f *.fna
+COMMAND		blast2gff3.pl \\
+			-i *.(t)blast(n).6 \\
+			-f *.fna
 
-USASGE
+OPTIONS
 
--i | --in		blast.6 file
--f | --fa		faa/fna file that is connected to blast.6 file
+-i | --in		(t)blastn.6 file to be converted
+-f | --fa		faa/fna file that is connected to (t)blastn.6 file
 -p | --prod		File containing locus => product information
 -o | --orgn		Organism title in .fna file (i.e. 'Encephalitozoon hellem ATCC 50504')
 
@@ -41,7 +43,6 @@ my $ext;
 if ($in =~ /\.tblastn\.6$/) { $ext = '.tblastn.6'; }
 else { $ext = '.blastn.6'; }
 $ext = uc($ext);
-my $hit;
 my ($filename,$dir) = fileparse($in);
 my $basename = basename($filename,$ext);
 
@@ -49,6 +50,8 @@ if($ext eq "TBLASTN") { $orgn = ""; }
 
 ## Check to see what file is being fed as an input for locus => product relation
 ## and open that file. If both .fna and *_product.txt is feed, *_product.txt is defaulted.
+
+## Populate a database containing the protein match and tieing it to the locus tag
 my %products;
 if($prod){ 
 	open PROD,"<","$prod"; 
@@ -91,6 +94,7 @@ open BLAST,"<","${in}";
 open OUT,">","${basename}.gff";
 
 ## Convert blast information to gff3 format
+my $hit;
 while (my $line = <BLAST>){
 	chomp $line;
 	if ($line =~ /^\#/) { next; }
