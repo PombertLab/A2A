@@ -4,17 +4,20 @@ from sys import exit,argv
 import re
 
 name = "GetOrganismData.py"
-version = "0.3"
-updated = "3/18/21	Updated to-download file/reduced webpage wait-time"
+version = "0.3a"
+updated = "3/21/21"
 
 usage = f"""\n
-NAME        {name}
-VERSION     {version}
-UPDATED     {updated}
-SYNOPSIS    The purpose of this script is to navigate the NCBI genome database, download the required files to 
-            create a protein and genomic database, as well as download files required for the A2A pipeline.
+NAME		{name}
+VERSION		{version}
+UPDATED		{updated}
+SYNOPSIS	The purpose of this script is to navigate the NCBI genome database, download the required files to 
+			create a protein and genomic database, as well as download files required for the A2A pipeline.
 
-COMMAND     {name} -k fungi -g Encephalitozoon -s hellem
+COMMAND     {name} \\
+			-k fungi \\
+			-g Encephalitozoon \\
+			-s hellem
 
 OPTIONS
 
@@ -51,6 +54,7 @@ parser.add_argument("-s","--species",required=True)
 
 args = parser.parse_args()
 
+## Acquire argparse options
 kingdom = args.kingdom
 kingdom = kingdom.lower()
 genus = args.genus
@@ -59,6 +63,7 @@ species = args.species
 species = species.lower()
 path = args.path
 
+## Make database directory
 db_dir = genus[0]+species[0:3]
 db = genus[0]+species[0:3]
 odir = pathlib.Path(f"{path}/{db_dir}")
@@ -75,6 +80,7 @@ driver = webdriver.Firefox(options=options)
 ## Open the NCBI genome database
 driver.get("https://ftp.ncbi.nlm.nih.gov/genomes/refseq/")
 
+## Files to download
 data = ["_genomic.gff.gz","_genomic.fna.gz","_protein.faa.gz","_rna_from_genomic.fna.gz","_feature_table.txt.gz","_assembly_report.txt"]
 
 ## Search for the kingdom specified
@@ -105,6 +111,7 @@ except:
 
 assembly_version = (driver.title).split("/")[-1]
 
+## Download files and make BLAST databases
 for key in data:
 	key = assembly_version + key
 	download = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,key))).get_attribute('href')
