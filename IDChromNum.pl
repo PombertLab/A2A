@@ -3,8 +3,8 @@
 use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
 
 my $name = 'IDChromNum.pl';
-my $version = '0.4a		File handling rework';
-my $updated = '3/18/21';
+my $version = '0.4b';
+my $updated = '3/21/21';
 my $usage = <<"EXIT";
 NAME		${name}
 VERSION		${version}
@@ -12,20 +12,21 @@ UPDATED		${updated}
 SYNOPSIS	The purpose of this script is to read through a taxonomized blast file and determine
 			the chromosome number of each contig in an assembly.
 
-COMMAND		${name} \
-				-f E_cuni.assembly.fasta \
-				-p E_cuni.proteins.fasta \
-				-d /media/FatCat/Databases/Ecun
+COMMAND		${name} \\
+			-f E_cuni.assembly.fasta \\
+			-p E_cuni.proteins.fasta \\
+			-d /media/FatCat/Databases/Ecun
 
 OPTIONS
 
 -f | --fast			Final assembly file
 -p | --proteins		Protein prediction file
 -d | --db			"/path/to/organism/database"
--r | --replace		Replace contig # with chromosome # in fasta file
--v | --verb			Output information about chromosome search and labeling
+-r | --replace		Replace contig # with chromosome # in fasta file [default = off]
+-v | --verb			Output information about chromosome search and labeling [default = off]
 EXIT
 die("\n$usage\n") unless(@ARGV);
+
 my $fa;
 my $prot;
 my $db;
@@ -39,11 +40,13 @@ GetOptions(
 	"v|verb" => \$v
 );
 
+## Get database name from database directory
 my $db_name;
 if($db =~ /.+?\/(.+)/){
 	$db_name = $1;
 }
 
+## Complete tblastn on assembly
 system("tblastn \\
 		-query $prot \\
 		-db $db_name\\
@@ -52,9 +55,11 @@ system("tblastn \\
 		-out proteins.tblastn.6
 ");
 
+## Acquire file information
 my($bout,$bpath) = fileparse("proteins.tblastn.6");
 my $bbasename = basename($bout,".tblastn.6");
 
+## Search for feature table in database directory
 opendir(DIR,$db);
 my $ft;
 foreach (my $file = <DIR>){
