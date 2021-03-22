@@ -1,41 +1,42 @@
 #!/usr/bin/perl
 ## Pombert Lab, IIT 2019
-my $name = 'runTaxonomizedBLAST.pl';
-my $version = '0.3';
-my $update = '2/6/2021';
-
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
+my $name = 'runTaxonomizedBLAST.pl';
+my $version = '0.3a';
+my $updated = '03/21/2021';
 my $usage = <<"OPTIONS";
-NAME		$name
-VERSION		$version
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
 SYNOPSIS	Runs taxonomized BLAST searches, and returns the outfmt 6 format with columns staxids, sscinames, sskingdoms, and sblastnames
-REQUIREMENTS	- BLAST 2.2.28+ or later
-		- NCBI taxonomony database (ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz)
-		- NCBI NR/NT databases (ftp://ftp.ncbi.nlm.nih.gov/blast/db/)
-		- The BLASTDB variable must be set in the environmental variables:
-		  export BLASTDB=/path/to/NCBI/TaxDB:/path/to/NCBI/NR:/path/to/NCBI/NT
+
+REQUIRES	BLAST 2.2.28+ or later
+			NCBI taxonomony database (ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz)
+			NCBI NR/NT databases (ftp://ftp.ncbi.nlm.nih.gov/blast/db/)
+			The BLASTDB variable must be set in the environmental variables:
+				export BLASTDB=/path/to/NCBI/TaxDB:/path/to/NCBI/NR:/path/to/NCBI/NT
 		
 NOTE		The NCBI TaxDB, nr and nt databases can be downloaded with the update_blastdb.pl from NCBI
 			https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/app/blast/update_blastdb.pl
 
-USAGE		runTaxonomizedBLAST.pl \\
-		-t 64 \\
-		-p blastn \\
-		-a megablast \\
-		-d nt \\
-		-q *.fasta \\
-		-e 1e-10 \\
-		-c 1
+USAGE		${name} \\
+			-t 64 \\
+			-p blastn \\
+			-a megablast \\
+			-d nt \\
+			-q *.fasta \\
+			-e 1e-10 \\
+			-c 1
 OPTIONS:
--t (--threads)	## Number of threads [Default = 16]
--p (--program)	## BLAST type: blastn, blastp, blastx, tblastn or tblastx [Default = blastn]
--a (--algo)	## Blastn algorithm: blastn, dc-megablast, or megablast [Default = megablast] 
--d (--db)	## Database to query: nt, nr, or other [Default = nt]
--g (--gilist)	## Restrict search to GI list
--q (--query)	## FASTA file(s) to query
--e (--evalue)	## Evalue cutoff [Default = 1e-05]
--c (--culling)	## Culling limit [Default = 1]
+-t | --threads		Number of threads [Default = 16]
+-p | --program		BLAST type: blastn, blastp, blastx, tblastn or tblastx [Default = blastn]
+-a | --algo			Blastn algorithm: blastn, dc-megablast, or megablast [Default = megablast] 
+-d | --db			Database to query: nt, nr, or other [Default = nt]
+-g | --gilist		Restrict search to GI list
+-q | --query		FASTA file(s) to query
+-e | --evalue		Evalue cutoff [Default = 1e-05]
+-c | --culling		Culling limit [Default = 1]
 OPTIONS
 die "$usage\n" unless @ARGV;
 ## Defining options
