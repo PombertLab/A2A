@@ -2,7 +2,7 @@
 
 use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
 
-my $name = 'SizeSortGFF3.pl';
+my $name = 'SizeSelectGFF3.pl';
 my $version = '0.2b';
 my $updated = '3/21/2021';
 my $usage = <<"EXIT";
