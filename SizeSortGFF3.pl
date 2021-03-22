@@ -3,18 +3,19 @@
 use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
 
 my $name = 'SizeSortGFF3.pl';
-my $version = '0.2a';
-my $updated = '3/18/21	File handling rework';
+my $version = '0.2b';
+my $updated = '3/21/2021';
 my $usage = <<"EXIT";
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
+SYNOPSIS	This script parses an assembly gff and seperates genes by size in to two files:
+			one for genes smaller than a given threshold, and one for genes larger than or equal 
+			to a given threshold.
 
-NAME        ${name}
-VERSION     ${version}
-UPDATED     ${updated}
-SYNOPSIS    This script parses an assembly gff and seperates genes by size in to two files:
-            one for genes smaller than a given threshold, and one for genes larger than or equal 
-            to a given threshold.
-
-COMMAND     ${name}
+COMMAND		 ${name} \\
+			-g E_cuniculi.gff3
+			-a 60
 
 OPTIONS
 
@@ -22,15 +23,14 @@ OPTIONS
 -n | --aanum    Amino acid number threshold [default = 100 aa]
 
 EXIT
-
-die($usage) unless(@ARGV);
+die("\n$usage\n") unless(@ARGV);
 
 my $gff;
 my $aa = 100;
 
 GetOptions(
-    "g|gff=s" => \$gff,
-    "n|aanum=i" => \$aa
+	"g|gff=s" => \$gff,
+	"n|aanum=i" => \$aa
 );
 my $ext;
 if ($gff =~ /(\.\w+)$/) { $ext = $1; }
@@ -49,14 +49,16 @@ open IN,"<","$gff";
 open SOUT,">","${dir}/${basename}_small${ext}";
 open LOUT,">","${dir}/${basename}_large${ext}";
 
+## Print sequences that are equal to and above the cutoff to _large.gff3, and sequences less than the cutoff to 
+## _small.gff3
 while(my $line = <IN>){
-    chomp($line);
-    if($line =~ /^#/) { next; }
-    my @gff = split("\t",$line);
-    my $length = (abs($gff[$end_index]-$gff[$start_index])+1);
-    if($length >= $bp){
-        print LOUT "$line\n"; }
-    else {
-        print SOUT "$line\n"; 
-    }
+	chomp($line);
+	if($line =~ /^#/) { next; }
+	my @gff = split("\t",$line);
+	my $length = (abs($gff[$end_index]-$gff[$start_index])+1);
+	if($length >= $bp){
+		print LOUT "$line\n"; }
+	else{
+		print SOUT "$line\n"; 
+	}
 }
