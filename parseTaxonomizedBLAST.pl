@@ -1,33 +1,36 @@
 #!/usr/bin/perl
 ## Pombert Lab, IIT 2019
-my $name = 'parseTaxonomizedBLAST.pl';
-my $version = '0.2';
-my $update = '2/6/2021';
-
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
+my $name = 'parseTaxonomizedBLAST.pl';
+my $version = '0.2a';
+my $updated = '03/21/2021';
 my $usage = <<"OPTIONS";
-NAME		$name
-VERSION		$version
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
 SYNOPSIS	Parses the content of taxonomized BLAST searches
-REQUIREMENT	-outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames'
-USAGE		parseTaxonomizedBLAST.pl \\
-		-b *.outfmt.6 \\
-		-f *.fasta \\
-		-n Streptococcus 'Streptococcus suis' 'Streptococcus sp.'
-		-e 1e-25 \\
-		-o output.fasta
-		-v
+
+REQUIRES	-outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames'
+
+USAGE		${name} \\
+			-b *.outfmt.6 \\
+			-f *.fasta \\
+			-n Streptococcus 'Streptococcus suis' 'Streptococcus sp.' \\
+			-e 1e-25 \\
+			-o output.fasta \\
+			-v
+
 OPTIONS:
--b (--blast)	## BLAST input file(s)
--f (--fasta)	## FASTA file(s)
--n (--name)		## Names to be queried
--i (--inverse)	## Returns queries NOT matching specified names
--c (--column)	## Which columns to query: sscinames, sskingdoms or sblastnames [Default: sscinames] 
--e (--evalue)	## Evalue cutoff for target organism(s) [Default: 1e-10]
--o (--output)	## FASTA output file containing the desired sequences
--k (--keep)		## Keep non-BLASTed Sequences 
--v (--verbose)	## Verbose [Default: off]
+-b | --blast		BLAST input file(s)
+-f | --fasta		FASTA file(s)
+-n | --name			Names to be queried
+-i | --inverse		Returns queries NOT matching specified names
+-c | --column		Which columns to query: sscinames, sskingdoms or sblastnames [Default: sscinames] 
+-e | --evalue		Evalue cutoff for target organism(s) [Default: 1e-10]
+-o | --output		FASTA output file containing the desired sequences
+-k | --keep			Keep non-BLAST-match Sequences 
+-v | --verbose		Verbose [Default: off]
 OPTIONS
 die "$usage\n" unless @ARGV;
 
@@ -105,14 +108,18 @@ for my $blast (@blasts) { ## For each BLASTed file
 		elsif ($column eq 'sblastnames'){$regex = $blasts{$blast}{$query}[11];}
 		if ($verbose){print "Best hit for $query = $regex\n";}
 		my @names = keys %scinames;
-		# my $flag = undef;
-		for my $name (@names){ ## For each name that was given to search for
-			if ($regex =~ /$name/i){ ## If the name matches
-				if($inverse){ ## And we are keeping non-matching sequences
-					delete $kept{$query}; ## Delete the matching sequence
+		## For each name that was given to search for
+		for my $name (@names){
+			## If the name matches
+			if ($regex =~ /$name/i){
+				## And we are keeping non-matching sequences
+				if($inverse){
+					## Delete the matching sequence
+					delete $kept{$query};
 					next;
 				}
-				else{ ## And we are keeping matching sequences, print them to file
+				## And we are keeping matching sequences, print them to file
+				else{
 					if ($verbose){
 						print "Match found for $name: ";
 						print "@{$blasts{$blast}{$query}}\n";
@@ -122,11 +129,14 @@ for my $blast (@blasts) { ## For each BLASTed file
 						my @seq = unpack ("(A60)*", $sequences{$query});
 						while (my $tmp = shift@seq){print OUT "$tmp\n";}
 					}
-					last; ## If a name matches, check next contig
+					## If a name matches, check next contig
+					last;
 				}
 			}
-			else{ ## If the name doesn't match
-				if($inverse){ ## And we are keeping non-matching sequences, print to file
+			## If the name doesn't match
+			else{
+				## And we are keeping non-matching sequences, print to file
+				if($inverse){
 					if ($verbose){
 						print "Match different from $name: ";
 						print "@{$blasts{$blast}{$query}}\n";
@@ -136,15 +146,19 @@ for my $blast (@blasts) { ## For each BLASTed file
 						my @seq = unpack ("(A60)*", $sequences{$query});
 						while (my $tmp = shift@seq){print OUT "$tmp\n";}
 					}
-					last; ## If a name is different, check next contig
+					## If a name is different, check next contig
+					last;
 				}
-				else{ ## And we are keeping matching sequences
-					delete $kept{$query}; ## Delete non-matching sequence
+				## And we are keeping matching sequences
+				else{
+					## Delete non-matching sequence
+					delete $kept{$query};
 				}
 			}
 		}
 	}
 }
+## Enclude sequences that do not have a blast-match in output file
 if($keep){
 	for my $query (sort keys %kept){
 		print OUT ">$query\n";
