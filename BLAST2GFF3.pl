@@ -94,14 +94,14 @@ open BLAST,"<","${in}";
 open OUT,">","${basename}.gff";
 
 ## Convert blast information to gff3 format
-my $hit;
+my $match;
 while (my $line = <BLAST>){
 	chomp $line;
 	if ($line =~ /^\#/) { next; }
 	else{
 		my @info = split("\t",$line);
 		my $query = $info[0]; 		## protein accession number
-		my $target = $info[1];		## location of the hit (contig or chromosome)
+		my $target = $info[1];		## location of the match (contig or chromosome)
 		my $identity = $info[2];  	## identity %
 		my $len = $info[3];			## alignment length
 		my $mis = $info[4];			## mismatches
@@ -113,24 +113,24 @@ while (my $line = <BLAST>){
 		my $evalue = $info[10];		## evalue
 		my $bit = $info[11];		## bitscore
 		my $product = $products{$query};
-		$hit++;
+		$match++;
 		if ($tstart < $tend){
 			print OUT "$target"."\t".$ext."\t"."match"."\t"."$tstart"."\t"."$tend"."\t";
-			print OUT "$evalue"."\t".'+'."\t".'.'."\t"."ID=hit$hit".';'."Name=hit$hit".';';
+			print OUT "$evalue"."\t".'+'."\t".'.'."\t"."ID=hit$match".';'."Name=hit$match".';';
 			print OUT "Note=$query".':'."$product"."\n";
 
 			print OUT "$target"."\t".$ext."\t"."match_part"."\t"."$tstart"."\t"."$tend";
-			print OUT "\t"."$evalue"."\t".'+'."\t"."0"."\t"."gene_id=hit$hit".';'."Parent=hit$hit";
-			print OUT ';'."transcript_id=hit$hit.t1".';'."Note=$query".':'."$product"."\n";
+			print OUT "\t"."$evalue"."\t".'+'."\t"."0"."\t"."gene_id=hit$match".';'."Parent=hit$match";
+			print OUT ';'."transcript_id=hit$match.t1".';'."Note=$query".':'."$product"."\n";
 		}
 		elsif ($tstart > $tend){
 			print OUT "$target"."\t".$ext."\t"."match"."\t"."$tend"."\t"."$tstart"."\t";
-			print OUT "$evalue"."\t".'-'."\t".'.'."\t"."ID=hit$hit".';'."Name=hit$hit".';';
+			print OUT "$evalue"."\t".'-'."\t".'.'."\t"."ID=hit$match".';'."Name=hit$match".';';
 			print OUT "Note=$query".':'."$product"."\n";
 
 			print OUT "$target"."\t".$ext."\t"."match_part"."\t"."$tend"."\t"."$tstart";
-			print OUT "\t"."$evalue"."\t".'-'."\t"."0"."\t"."gene_id=hit$hit".';'."Parent=hit$hit";
-			print OUT ';'."transcript_id=hit$hit.t1".';'."Note=$query".':'."$product"."\n";
+			print OUT "\t"."$evalue"."\t".'-'."\t"."0"."\t"."gene_id=hit$match".';'."Parent=hit$match";
+			print OUT ';'."transcript_id=hit$match.t1".';'."Note=$query".':'."$product"."\n";
 		}
 	}
 }
