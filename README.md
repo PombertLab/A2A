@@ -80,26 +80,23 @@ The next step in cleaning our raw assembly is removing contigs smaller than a de
 We size select contigs from assemblies with the following command:
 
 ```bash
-SortContigs.pl \
+SizeSelectContigs.pl \
 	-i $ASSEMBLY/parsed.fasta \
-	-v
 ```
 
 Options for SortContigs.pl  are:
 
 ```bash
+-i  | --in      Name of input file
 -mn | --min     Minimum size of contigs [default=1k]
 -mx | --max     Maximum size of contigs
--i  | --in      Name of input file
--v  | --verb    Print the first -n bases and last -n bases 
--n  | --num     Number of bases to be printed [default=50]
 ```
 
 We reorder and rename contigs from assemblies with the following command:
 
 ```bash
 ReorderContigs.pl \
-	-i $ASSEMBLY/sorted.fasta
+	-i $ASSEMBLY/size_selected.fasta
 ```
 
 ### Matching Against a Reference Genome
@@ -232,7 +229,7 @@ We want the predictions to be in GFF format, as it is the required format for Ap
 
 
 ```bash
-SizeSortGFF3.pl \
+SizeSelectGFF3.pl \
 	-g $ASSEMBLY/proteins.reoriented.gff \
 	-n 60
 ```
