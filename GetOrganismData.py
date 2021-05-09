@@ -2,6 +2,7 @@
 
 from sys import exit,argv
 import re
+import os
 
 name = "GetOrganismData.py"
 version = "0.3a"
@@ -75,7 +76,7 @@ system(f"echo 'Searching for {genus} {species} in the {kingdom} folder in the NC
 ## Creating web scraper
 options = Options()
 options.headless = True
-driver = webdriver.Firefox(options=options)
+driver = webdriver.Firefox(options=options,service_log_path=os.path.devnull)
 
 ## Open the NCBI genome database
 driver.get("https://ftp.ncbi.nlm.nih.gov/genomes/refseq/")
