@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.1.0'
+version = '0.1.1'
 updated = '2023-05-20'
 
 usage = f"""
@@ -11,81 +11,83 @@ UPDATED		{updated}
 SYNOPSIS	Interface between Apollo Arrow, Apollo, and the user that minimizes intermidiate steps.
 
 REQUIRES	Apollo (https://github.com/GMOD/Apollo)
-			python-apollo (https://github.com/galaxy-genome-annotation/python-apollo)
-			$APOLLO enviromental variable (/path/to/Apollo_distribution)
+		python-apollo (https://github.com/galaxy-genome-annotation/python-apollo)
+		$APOLLO enviromental variable (/path/to/Apollo_distribution)
 
 ------------------------------------------------------------------------------------------------------------------------
 Add an Organism
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --add_organism \\
-			 -f 50507.fasta \\
-			 -g Encephalitozoon \\
-			 -s intestinalis \\
-			 -i E_intestinalis_50507 \\
-			 -p /media/FatCat/apollo_data/E_intestinalis_50507
+		 -f 50507.fasta \\
+		 -g Encephalitozoon \\
+		 -s intestinalis \\
+		 -i E_intestinalis_50507 \\
+		 -p /media/FatCat/apollo_data/E_intestinalis_50507
 
--f		Assembly fasta file
--g		Genus
--s		Species
--i		Organism ID
--p		Path to store organism data
+-f (--fasta)	Assembly fasta file
+-g (--genus)	Genus
+-s (--species)	Species
+-i (--id)	Organism ID
+-p (--path)	Path to store organism data
 
 ------------------------------------------------------------------------------------------------------------------------
 Delete an Organism
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --delete_organism \\
-			 -i E_intestinalis_50507
+		 -i E_intestinalis_50507
 
--i		Organism ID
+-i (--id)	Organism ID
 
 ------------------------------------------------------------------------------------------------------------------------
 Load Annotations
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --load_annotations \\
-			 -i E_intestinalis_50507 \\
-			 -a proteins.long.gff
+		 -i E_intestinalis_50507 \\
+		 -a proteins.long.gff
 
--i		Organism ID
--a		Annotation gff file
+-i (--id)	Organism ID
+-a (--annot)	Annotation gff file
 
 ------------------------------------------------------------------------------------------------------------------------
 Remove Annotations
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --remove_annotations \\
-			 -i E_intestinalis_50507
+		 -i E_intestinalis_50507
 
--i Organism ID
+-i (--id)	Organism ID
 
 ------------------------------------------------------------------------------------------------------------------------
 Add a Reference
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --add_reference \\
-			 -a E_intestinalis_50506.blast.gff \\
-			 -t match,match_part \\
-			 -l E_intestinalis_50506 \\
-			 -d -d /media/FatCat/apollo_data/E_intestinalis_50507
+		 -a E_intestinalis_50506.blast.gff \\
+		 -t match,match_part \\
+		 -l E_intestinalis_50506 \\
+		 -d -d /media/FatCat/apollo_data/E_intestinalis_50507
 
--r		Reference gff file
--t		Reference type (CDS;match,match_part;tRNA)
--l		Reference label
--p		Path to store organism data
--c		Track color
+-r (--ref)	Reference gff file
+-t (--type)	Reference type (CDS;match,match_part;tRNA)
+-l (--label)	Reference label
+-p (--path)	Path to store organism data
+-c (--color)	Track color
 
 ------------------------------------------------------------------------------------------------------------------------
 Remove a Reference
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --remove_reference \\
-			 -l E_intestinalis_50506 \\
-			 -d /media/FatCat/apollo_data/E_intestinalis_50507
+		 -l E_intestinalis_50506 \\
+		 -d /media/FatCat/apollo_data/E_intestinalis_50507
 
--l		Reference label
--p		Organism data location (apollo/data/organism)
+-l (--label)	Reference label
+-p (--path)	Organism data location (apollo/data/organism)
+
+------------------------------------------------------------------------------------------------------------------------
 """
 
 from sys import argv
