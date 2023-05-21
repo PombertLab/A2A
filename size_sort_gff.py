@@ -1,20 +1,24 @@
 #!/usr/bin/env	python3
 
-name = "size_select_proteins.py"
-version = "0.1.0"
-updated = "2023-05-17"
+name = "size_sort_gff.py"
+version = "0.1.1"
+updated = "2023-05-20"
 
 usage = f"""
-NAME
-VERSION
-UPDATED
-SYNOPSIS
+NAME		{name}
+VERSION		{version}
+UPDATED		{updated}
+SYNOPSIS	Separates gene predictions into two files based on coded protein length.
 
-USAGE
+USAGE		{name} \\
+		 -g 50507.apollo.gff \\
+		 -a 100 \\
+		 -o SIZE_SORT
 
 OPTIONS
-
-
+-g (--gff)	gff file from gene prediction tool
+-a (--aa_len)	Protein length in amino-acids [Default: 60]
+-o (--outdir)	Output directory [Default = SIZE_SORTED_PROTEINS]
 """
 
 from sys import argv

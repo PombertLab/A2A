@@ -184,7 +184,16 @@ Apollo requires the mRNA/exon feature to add predictions as annotations, which i
 
 ```bash
 prodigal_to_apollo_gff.py \
-	-g $ASSEMBLY/proteins.reoriented_large.gff
+	-g $WORK_DIR/proteins.gff
+```
+
+Not all gene predictions will be accurate, however, and smaller genes can be spurious. Separating genes by size, we can create annotations from the larger genes automatically, and add the smaller genes when evidence supports them, saving time. To parse the smaller genes from the larger ones, the following command can be used:
+
+```bash
+size_sort_gff.py \
+	-g $WORK_DIR/proteins.apollo.gff \
+	-a 60
+	-o $SIZE_SORT_DIR
 ```
 
 The gff file can then be uploaded as user-loaded annotations:
@@ -192,10 +201,8 @@ The gff file can then be uploaded as user-loaded annotations:
 ```bash
 apollo_annotator_utilities.py --load_annotations \
 	-i "User-defined ID of organism" \
-	-a <predicted-genes>.gff3
+	-a $SIZE_SORT_DIR/proteins.long.gff
 ```
-
-By uploading gene predictions we will only need to manually add or remove a small amount of annotations to our organism, reducing process time.
 
 #### <b>Create and Load References</b>
 

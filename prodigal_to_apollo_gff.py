@@ -5,12 +5,13 @@ version = "0.1.1"
 updated = "2023-05-20"
 
 usage = f"""
-NAME
-VERSION
-UPDATED
-SYNOPSIS
+NAME		{name}
+VERSION		{version}
+UPDATED		{updated}
+SYNOPSIS	Adds the mRNA/exon feature to the Prodigal gff file to make it Apollo compatible.
 
-USAGE
+USAGE		{name} \\
+		 -g 50507.prodigal.gff
 
 OPTIONS
 
