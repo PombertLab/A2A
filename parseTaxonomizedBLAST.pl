@@ -3,8 +3,8 @@
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
 my $name = 'parseTaxonomizedBLAST.pl';
-my $version = '0.2a';
-my $updated = '03/21/2021';
+my $version = '0.2.1';
+my $updated = '2023-04-25';
 my $usage = <<"OPTIONS";
 NAME		${name}
 VERSION		${version}
