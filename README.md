@@ -1,4 +1,7 @@
-# A2A - Assembly to Annotations
+#### <b>Version: 0.2.0</b>
+#### <b>Updated: 2023-05-20</b>
+
+# A2A - Assembly to Apollo Annotations
 
 The A2A pipeline was designed as a precursor pipeline to the [A2GB](https://github.com/PombertLab/A2GB) pipeline.
 
@@ -9,12 +12,8 @@ The A2A pipeline takes a user through the process of cleaning an assembly, orien
 - [Requirements](#Requirements)
 - [Pipeline Process](#Pipeline-Process)
 	- [Cleaning Raw Assembly](#Cleaning-Raw-Assembly)
-		- [Identify and Parse Contaminants](#Identify-and-Parse-Contaminants)
-		- [Size Select, Reorder, and Rename](#Size-Select,-Reorder,-and-Rename)
-	- [Matching Against a Reference Genome](#Matching-Against-a-Reference-Genome)
-		- [Obtain NCBI Organism Data](#Obtain-NCBI-Organism-Data)
-		- [Chromosome Consensus Creation](#Chromosome-Consensus-Creation)
-		- [Contig Reorientation](#Contig-Reorientation)
+		- [Size Selection](#Size-Selection)
+		- [Identify and Remove Contaminants](#Identify-and-Remove-Contaminants)
 	- [Prepare Apollo for Annotations](#Prepare-Apollo-for-Annotations)
 		- [Creating an Organism](#Creating-an-Organism)
 		- [Create and Load Prediction Data as Annotations](#Create-and-Load-Prediction-Data-as-Annotations)
@@ -25,284 +24,214 @@ The A2A pipeline takes a user through the process of cleaning an assembly, orien
 
 - [PERL5](https://www.perl.org/)
 - [NCBI BLAST+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)
+	- [Non-Redundant Nucleotide Database](https://www.ncbi.nlm.nih.gov/books/NBK62345/#blast_ftp_site.The_blastdb_subdirectory)
 - [Python3](https://www.python.org/downloads/)
-	- [Selenium](https://pypi.org/project/selenium/)
-	- [arrow](https://pypi.org/project/arrow/)
-	- [apollo](https://python-apollo.readthedocs.io/en/latest/README.html)
-- [Python3-devel](https://pkgs.org/download/python3-devel)
+	- [apollo](https://github.com/galaxy-genome-annotation/python-apollo)
 - [Apollo](https://genomearchitect.readthedocs.io/en/latest/)
 
 ## Pipeline Process
 
-First, let's prepare our working environment by creating a variable that points to the location of the raw assembly.
-
-
-```bash
-export ASSEMBLY=/path/to/raw_assembly
-```
-
 ### Cleaning Raw Assembly
 
-#### Identify and Parse Contaminants
+The old adage states that low quality input will surely result in low quality output, or more colloquially, "Garbage In, Garbage Out". Thus, before annotating a genome assembly it is good practice to remove potential "garbage" from the mix. To do so, contigs of uninformative length and those belonging to possible contaminants (it happens to the best of us...) should be removed. Because the method of contaminant removal used in this pipeline involves comparing <i>all</i> assembled contigs to <i>all</i> [nonredundant nucleotide sequences in NCBI](https://www.ncbi.nlm.nih.gov/books/NBK62345/#blast_ftp_site.The_blastdb_subdirectory), it is time efficeint to remove unhelpful contigs first, however, there is nothing inherently wrong with reversing the order.
 
-The first step in cleaning our raw assembly is identifying which contig(s) belong to the organism that is being analyzed. Contaminants are identified by a sequence homology search utilizing NCBI's [BLAST+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) suite. Next, the contaminants are parsed out of the assembly file.
+#### <b>Size Selection</b>
 
-We identify contaminants in the assembly with the following command:
+Assembled contigs less than 1000bps can be removed as follows:
+
+```bash
+process_fasta_sequences.py \
+	--fasta <assembly-name>.fasta \
+	--min 1000 \
+	--outdir $WORK_DIR
+```
+
+The 'process' in [<i>process_fasta_sequences.py</i>](https://github.com/PombertLab/A2A/blob/main/process_fasta_sequences.py) is not only size selection, but reordering contigs by length (largest to smallest), and providing unique/meaningful names. Additional options are available for fine-tuning:
+
+```
+-f (--fasta)	Input fasta file(s)
+-o (--outdir)	Output directory [Default: processed_fastas]
+
+-p (--prefix)	Prefix to give contigs [Default: contig_]
+-n (--min)	Minimum contig length [Default: 500]
+-x (--max)	Maximum contig length [Default: None]
+```
+
+#### <b>Identify and Remove Contaminants</b>
+
+Now that extraneous contigs have been removed, the genetic origin of remaining contigs should be checked. To do so, a sequence homology search utilizing [NCBI's BLAST+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) suite is performed:
 
 ```bash
 runTaxonomizedBLAST.pl \
-	-t 64 \
+	-t 4 \
 	-p blastn \
 	-a megablast \
 	-d nt \
-	-q $ASSEMBLY/<raw_assembly>.fasta \
+	-q $WORK_DIR/<assembly-name>.fasta \
 	-e 1e-10 \
-	-c 1
+	-c 1 \
+	-o $WORK_DIR
 ```
 
-This command runs a BLAST homology search on the specified assembly at the nucleotide level [-p blastn] using the non-redundant database [-d nt], with an error value cutoff of 1e-10 [-e 1e-10], and a culling limit of 1 [-c 1]. The reason we set a culling limit of 1 is because we want only the BEST match.
+Here, the sequence homology search is performed at the nucleotide level `(-p blastn)` against the non-redundant nucleotide database `(-d nt)`, with an error value cutoff of 1e-10 `(-e 1e-10)`, using 4 computing threads `(-t 4)`. Because the <b>best</b> genetic origin is desired, a culling limit of 1 `(-c 1)` has been specified.
 
-We remove contaminants from the assembly with the following command:
+The output of runTaxonomizedBLAST.pl will look something to the following:
+
+```
+## qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames
+contig_01	gi|303303011|gb|CP001952.1|	4002	240259	99.986	236259	4.361e+05	0.0	876142	Encephalitozoon intestinalis ATCC 50506	Eukaryota	microsporidians
+contig_02	gi|303302113|gb|CP001947.1|	7982	206197	99.997	198217	3.660e+05	0.0	876142	Encephalitozoon intestinalis ATCC 50506	Eukaryota	microsporidians
+contig_03	gi|303301797|gb|CP001945.1|	6983	196774	99.995	189795	3.504e+05	0.0	876142	Encephalitozoon intestinalis ATCC 50506	Eukaryota	microsporidians
+.
+.
+.
+contig_38	gi|1909942514|dbj|AP023533.1|	10	1850	96.929	1856	3097	0.0	9606	Homo sapiens	Eukaryota	primates
+```
+
+The final three columns contain the taxon information for the <b>best</b> genetic origin of each contig, and contigs whose genetic origin does not match to specific scientific name(s) can be removed with:
 
 ```bash
 parseTaxonomizedBLAST.pl 
-	-b $ASSEMBLY/*.outfmt.6 \
-	-f $ASSEMBLY/<raw_assembly>.fasta \
+	-b $WORK_DIR/*.blastn.6 \
+	-f $WORK_DIR/<assembly-name>.fasta \
 	-n "organism of interest 1" "organism of interest 2"
 	-e 1e-10 \
-	-o $ASSEMBLY/parsed.fasta
+	-o $WORK_DIR/<assembly-name>.parsed.fasta
 ```
 
-#### Size Select, Reorder, and Rename
-
-The next step in cleaning our raw assembly is removing contigs smaller than a desired cutoff, sorting contigs from longest to shortest, and thusly renaming the contigs to match their new placement in the assembly file.
-
-We size select contigs from assemblies with the following command:
+Different naming conventions can be used to remove contaminants, and additional options are as follows:
 
 ```bash
-SizeSelectContigs.pl \
-	-i $ASSEMBLY/parsed.fasta \
+-b | --blast		BLAST input file(s)
+-f | --fasta		FASTA file(s)
+-n | --name			Names to be queried
+-i | --inverse		Returns queries NOT matching specified names
+-c | --column		Which columns to query: sscinames, sskingdoms or sblastnames [Default: sscinames] 
+-e | --evalue		Evalue cutoff for target organism(s) [Default: 1e-10]
+-o | --output		FASTA output file containing the desired sequences
+-k | --keep			Keep non-BLAST-match Sequences 
+-v | --verbose		Verbose [Default: off]
 ```
 
-Options for SortContigs.pl  are:
+### Orienting to a Reference Genome (Optional)
+
+If a reference genome exists for the one being annotated, the contig-chromosome relationship may be desirable information to have. Keeping naming and orientation consistent between isolates, and even between close species, helps simplify future analysis. Utilizing a reference assembly, we can determine if the assembled contigs are in the _same_ or _reverse complement_ orientation compared to the reference, and reoreint them accordingly:
 
 ```bash
--i  | --in      Name of input file
--mn | --min     Minimum size of contigs [default=1k]
--mx | --max     Maximum size of contigs
+orient_fastas_to_reference.py \
+	-f $WORK_DIR/<assembly-name>.parsed.fasta \
+	-r <reference-assembly>.fasta \
+	-o $WORK_DIR
 ```
 
-We reorder and rename contigs from assemblies with the following command:
+Fine-tuning the parameters to assign orientation is possible with additional options:
 
-```bash
-ReorderContigs.pl \
-	-i $ASSEMBLY/size_selected.fasta
 ```
-
-### Matching Against a Reference Genome
-
-In order to determine the contig-chromosome relationship in our assembly, a reference is needed. Our pipeline was built around [NCBI datasets](https://ftp.ncbi.nlm.nih.gov/refseq/release/) and assumes that the selected reference has a chromosome assignment. The selected reference will be used to identify whether our contigs are in the _same_ or _reverse complement_ orientation compared to the reference. If necessary, our data will be reoriented to match the selected reference.
-
-#### Obtain NCBI Organism Data
-
-For each reference assembly in NCBI, exists a plethora of useful data files. Of the most interest to us will be the files that contain the genome, proteins and RNA sequences, and the reference feature table. The sequence files will be used to create BLAST databases for genome comparisons. The feature table contains accession numbers for chromosomes.
-
-These files and databases can be obtained and created using the following command:
-
-```bash
-GetOrganismData.py \
-	-k "kingdom" \
-	-g "genus" \
-	-s "species" \
-	-p "/desired/path/for/database/creation"
+-i (--min_pident)	Minimum percent identity to assign segment to reference [Default: 95%]
+-a (--min_palign)	Minumum percent of the contig participating in alignment to assign segment to reference [Default: 5%]
+-v (--max_overlp)	Maximum percent of alignment allowed to overlap a previous alignment to assign segment to reference [Default: 5%]
 ```
-
-To ease the following steps, let's create a database enviroment variable:
-
-```bash
-export DATABASE="/path/to/created/database"
-```
-
-This variable will point to the location of where GetOrganismData.py stored our NCBI files and reference databases. The GetOrganismData.py command will place files in a directory that is named using the first letter of the genus and the first three letters of the species.
-
-For example:
-
-```bash
-- Encephalitozoon cuniculi --> Ecun
-```
-
-#### Chromosome Consensus Creation
-Our pipeline uses protein homology searches to perform chromosome assignments. The first step in the consensus creation is obtaining a list of predicted proteins from our genome. In the case of Microsporidia, we use the [Prodigal](https://github.com/hyattpd/Prodigal) gene prediction tool.
-
-We can predict proteins with Prodigal as follows:
-
-```bash
-prodigal \
-	-i $ASSEMBLY/reordered.fasta \
-	-c \
-	-a $ASSEMBLY/proteins.fasta
-```
-
-Each protein is tied to an accession number that is unique to a chromosome. For each contig, we count the number of proteins that are tied to the different chromosomes accession numbers of the organism, creating our consensus.
-
-The chromosome consensus can be obtained by running the following command:
-
-```bash
-IDChromNum.pl \
-	-f $ASSEMBLY/reordered.fasta \
-	-p $ASSEMBLY/proteins.fasta \
-	-d $DATABASE
-```
-
-#### Contig Reorientation
-
-To determine orientation and reorient when necessary, we run the following command:
-
-```bash
-ContigOrientation.pl \
-	-a $ASSEMBLY/chromo.fasta \
-	-c $ASSEMBLY/chromosome.log \
-	-d $DATABASE \
-	-r
-```
-
-The possible outcomes are as follows.
-- If the number of 5'->3' reads is greater than the number of 3'->5' and non-sense reads
-	- The contig matches NCBI's orientation and does not require reorientation. 
-- If the number of 3'->5' reads is greater than the number of 5'->3' and non-sense reads
-	- The contig is Reverse Complimentary to NCBI's, and needs to be reoriented. 
-- If the number of non-sense reads is greater than the number of 5'->3' and 3'->5' reads
-	- Analyze assembly on a deeper level to determine what is going on.
-
-Each protein has a unique accession number, n. The protein previous on the 5' side has an accession number of n-1 and the protein latter on the 3' side has an accession number of n+1. The difference between accession numbers along the contig is determined, and are sorted into three categories: n+1 (5'->3'), n-1 (3'->5'), and all other differences non-sense. 
 
 ### Prepare Apollo for Annotations
 
-We will now prepare our [Apollo](https://genomearchitect.readthedocs.io/en/latest/) enviroment for the annotation process by:
-- creating an organism and uploading genome data to Apollo
-- creating and loading predicted proteins to Apollo as annotations
-- creating evidence based annotations using sequence homology searches on references
-- loading evidence based annotations as comparisons
+For this part of the pipeline, access to an established [Apollo](https://genomearchitect.readthedocs.io/en/latest/) server in necessary. For information on how to setup an Apollo instance, refer to the Apollo [Setup Guide](https://genomearchitect.readthedocs.io/en/latest/Setup.html#:~:text=Download%20Apollo%20from%20the%20latest%20release%20under%20source-code,for%20production%20continue%20onto%20configuration%20below%20after%20install.). <b><i> NOTE: arrow-based operations must be performed on the server hosting the Apollo browser. </i> </b>
 
-First we are going to create a directory where our organism data for Apollo will be stored.
+
+There are several steps to setting up the Apollo enviroment for the annotation process:
+- create an organism and upload its genome data to Apollo
+- create and load predicted genes to Apollo as annotations
+- create and load evidence based annotations using sequence homology searches on references
+
+This pipeline utilizes the [Apollo API](https://github.com/galaxy-genome-annotation/python-apollo), a handy python intermediate for communicating with the Apollo backend. Before moving through the following steps, be sure to initiallize the arrow CLI tool by running `arrow init`. You will be prompted to sign in so arrow can access your Apollo account. <b><i>BE AWARE, this will store your username and password in a plain text file in your home directory (~/.apollo-arrow.yml)!</i></b>
+
+
+#### <b>Creating an Organism</b>
+
+For the functionality of <i>[apollo_annator_utilities.py]()</i>, there needs to exist an enviromental path variable `$APOLLO` that points to the installation directory of the Apollo distribution.
 
 ```bash
-mkdir /path/to/apollo/organism/data
+export APOLLO=/path/to/Apollo
 ```
 
-Next we are going to create an enviroment variable that points there.
+To add annotations to your organism, you will first need to create an instance of it on Apollo:
 
 ```bash
-export $APOLLO_DATA = /path/to/apollo/organism/data
-```
-
-It is good practice to have your directory name match the ID you will give your organism in the next step for simplicity of use.
-
-#### Creating an Organism
-
-To annotate our organism, we first need to create an instance of it on Apollo.
-
-```bash
-Apollo_Utilities.pl --add_organism \
--f $ASSEMBLY/reoriented.fasta \
+apollo_annotator_utilities.py --add_organism \
+-f $WORK_DIR/<assembly-name>/<assembly-name>.oriented.fasta \
 -g "Genus of organism" \
 -s "Species of organism" \
 -i "User-defined ID of organism" \
--d $APOLLO_DATA
+-p $APOLLO_DATA_DIR
 ```
 
-If you have not yet initiallized your arrow tool by running `arrow init`, you will be prompted to sign in so arrow can access your Apollo account.
 
-#### Create and Load Prediction Data as Annotations
+#### <b>Create and Load Prediction Data as Annotations</b>
 
-Now we must get a new set of protein predictions based off the assembly that was reoriented to match the selected reference.
+There are a number of tools that can be used to predict gene models, such as [GeneMark](http://exon.gatech.edu/GeneMark/) and [Augustus](https://bioinf.uni-greifswald.de/augustus/). For our purposes, we utilize [Prodigal](https://github.com/hyattpd/Prodigal).
+
+Predicting gene models with Prodigal is straight-forward:
 
 ```bash
 prodigal \
-	-i $ASSEMBLY/reoriented.fasta \
+	-i $WORK_DIR/<assembly-name>/<assembly-name>.oriented.fasta \
 	-c \
+	-a $WORK_DIR/<assembly>.faa
 	-f gff \
-	-o $ASSEMBLY/proteins.reoriented.gff
+	-o $WORK_DIR/<assembly-name>.gff
 ```
 
-We want the predictions to be in GFF format, as it is the required format for Apollo user loaded annotations, so the format flag is passed gff [-f gff].
-
+Apollo requires the mRNA/exon feature to add predictions as annotations, which is missing in the gff file produced by Prodigal. These featueres can be added to the Prodigal gff file with:
 
 ```bash
-SizeSelectGFF3.pl \
-	-g $ASSEMBLY/proteins.reoriented.gff \
-	-n 60
+prodigal_to_apollo_gff.py \
+	-g $ASSEMBLY/proteins.reoriented_large.gff
 ```
 
-Not all protein predictions will be found in our organism or reference(s). Proteins smaller than a given number of amino acids could be concidered low confidence, and be removed from the file we want to load as is the case in the SizeSortGFF3.pl command, where proteins under 60 amino acids are removed [-n 60].
-
-Next, Apollo requires a specific gff format that differs from that produced by [Prodigal](https://github.com/hyattpd/Prodigal), so we must reformat Prodigal's gff using the following command:
+The gff file can then be uploaded as user-loaded annotations:
 
 ```bash
-ProdigalGFFtoApolloGFF.pl \
-	-i $ASSEMBLY/proteins.reoriented_large.gff
+apollo_annotator_utilities.py --load_annotations \
+	-i "User-defined ID of organism" \
+	-a <predicted-genes>.gff3
 ```
 
-Now we upload the reformatted gff file as user-loaded annotations.
+By uploading gene predictions we will only need to manually add or remove a small amount of annotations to our organism, reducing process time.
 
-```bash
-Apollo_Utilities.pl --load_annotations \
-	-i "Organism ID" \
-	-a $ASSEMBLY/proteins.reoriented_large.gff.apollo.gff3
-```
+#### <b>Create and Load References</b>
 
-By uploading protein predictions we will only need to manually add or remove a small amount of annotations to our organism reducing annotation time.
+Reference annotations can be used to assess the validity of protein predictions that were loaded as user annotations, in addition to identifying the presence of introns, untraslated transcription regions (UTRs) and/or broken reading frames. This can be done by performing a sequence homology search of validated proteins against the assembled genome.
 
-#### Create and Load References
-
-Reference annotations will allow us to assess the validity of protein predictions that we loaded as user annotations, as well as help identify the presence of introns, untraslated transcription regions (UTRs), or broken reading frames.
-
-First, we want to create a directory to keep track of selected reference(s) files and a directory for the local BLAST database.
-
-```bash
-mkdir $ASSEMBLY/BLAST; mkdir $ASSEMBLY/BLAST/DB;
-```
-
-Next, we want to make a database from the reoriented assembly that the selected references can be compared to.
-
-```bash
-makeblastdb \
-	-in $ASSEMBLY/reoriented.fasta \
-	-dbtype nucl \
-	-out $ASSEMBLY/BLAST/DB/"db_name"
-```
-
-Next, we want to check sequence homology between the studied organism and the selected reference(s).
+The sequence homology search is performated between the the selected reference(s) and the assembled genome as follows:
 
 ```bash
 tblastn \
-	-num_threads 32 \
-	-query $DATABASE/"reference_genome"/"protein.faa" \
-	-db $ASSEMBLY/BLAST/DB/"db_name" \
+	-query <reference-protein>.faa \
+	-subject $WORK_DIR/<assembly-name>/<assembly-name>.oriented.fasta \
+	-culling_limit 1 \
 	-evalue 1e-05 \
 	-outfmt 6 \
-	-out $ASSEMBLY/BLAST/"reference.tblastn.6"
+	-out $WORK_DIR/BLAST/<reference-name>.tblastn.6
 ```
 
-Now we have to convert the sequence homology search to gff format so it can be added to Apollo.
+Because Apollo accepts gff files, the sequence homology results need to be converted:
 
 ```bash
-BLAST2GFF3.pl \
-	-i $ASSEMBLY/BLAST/"reference.tblastn.6" \
-	-f $DATABASE/"reference_genome"/"protein.faa"
+blast_to_apollo_gff.py \
+	-b $WORK_DIR/BLAST/<reference-name>.tblastn.6 \
+	-a <reference-protein>.products
 ```
 
-Finally we are able to add the reference gff to Apollo for comparison purposeses, with the following command:
+Then the reference gff can be added to Apollo for comparison purposeses, with the following command:
 
 ```bash
-Apollo_Utilities.pl --add_reference \
-	-a $ASSEMBLY/BLAST/"reference.gff" \
+apollo_annotator_utilities.py --add_reference \
+	-a $WORK_DIR/BLAST/<reference-name>.tblastn.6 \
 	-t match,match_part \
-	-l "track label" \
-	-d $APOLLO_DATA
+	-l <track-label> \
+	-d $APOLLO_DATA_DIR
 ```
 
-This step can repeated for as many references, tRNAs, rRNAs, and others, that Apollo will accept.
+This step can be repeated for as many references, tRNAs, rRNAs, and others, that Apollo will accept.
 
 ## Literature
 
@@ -314,3 +243,7 @@ Barrett T, Clark K, Gevorgyan R, Gorelenkov V, Gribov E, Karsch-Mizrachi I, Kime
 *Nucleic Acids Res.* 2012 Jan;40(Database issue):D57-63. doi: [10.1093/nar/gkr1163](https://doi.org/10.1093/nar/gkr1163). Epub 2011 Dec 1. PMID: 22139929; PMCID: PMC3245069.
 
 Dunn NA, Unni DR, Diesh C, Munoz-Torres M, Harris NL, Yao E, Rasche H, Holmes IH, Elsik CG, Lewis SE. **Apollo: Democratizing genome annotation.** *PLoS Comput Biol.* 2019 Feb 6;15(2):e1006790. doi: [10.1371/journal.pcbi.1006790](https://doi.org/10.1371/journal.pcbi.1006790). PMID: 30726205; PMCID: PMC6380598.
+
+Brůna T, Lomsadze A, Borodovsky M. **GeneMark-EP+: eukaryotic gene prediction with self-training in the space of genes and proteins.** *NAR Genom Bioinform.* 2020 Jun;2(2):lqaa026. [doi: 10.1093/nargab/lqaa026](https://doi.org/10.1093/nargab/lqaa026) PMID: 32440658; PMCID: PMC7222226.
+
+Mario Stanke, Mark Diekhans, Robert Baertsch, David Haussler **Using native and syntenically mapped cDNA alignments to improve de novo gene finding.** *Bioinformatics* 2008 24(5), pages 637–644, [doi: 10.1093/bioinformatics/btn013](https://doi.org/10.1093/bioinformatics/btn013)
