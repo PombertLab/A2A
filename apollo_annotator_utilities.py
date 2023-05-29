@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.1.1'
-updated = '2023-05-20'
+version = '0.2.0'
+updated = '2023-05-29'
 
 usage = f"""
 NAME		{name}
@@ -29,7 +29,6 @@ COMMAND		{name} --add_organism \\
 -g (--genus)	Genus
 -s (--species)	Species
 -i (--id)	Organism ID
--p (--path)	Path to store organism data
 
 ------------------------------------------------------------------------------------------------------------------------
 Delete an Organism
@@ -73,7 +72,6 @@ COMMAND		{name} --add_reference \\
 -r (--ref)	Reference gff file
 -t (--type)	Reference type (CDS;match,match_part;tRNA)
 -l (--label)	Reference label
--p (--path)	Path to store organism data
 -c (--color)	Track color
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -85,7 +83,6 @@ COMMAND		{name} --remove_reference \\
 		 -d /media/FatCat/apollo_data/E_intestinalis_50507
 
 -l (--label)	Reference label
--p (--path)	Organism data location (apollo/data/organism)
 
 ------------------------------------------------------------------------------------------------------------------------
 """
@@ -98,7 +95,8 @@ if len(argv) < 2:
 
 from argparse import ArgumentParser
 from subprocess import run
-from os import environ
+from os import environ, makedirs
+from os.path import isdir
 
 GetOptions = ArgumentParser()
 group = GetOptions.add_mutually_exclusive_group(required=True)
@@ -112,7 +110,9 @@ group.add_argument("--remove_annotations",default=False,action='store_true')
 group.add_argument("--add_reference",default=False,action='store_true')
 group.add_argument("--remove_reference",default=False,action='store_true')
 
-args = GetOptions.parse_args()
+GetOptions.add_argument("-i","--id",required=True)
+
+args = GetOptions.parse_known_args()[0]
 
 add_org = args.add_organism
 del_org = args.delete_organism
@@ -120,8 +120,11 @@ load_annot = args.load_annotations
 rem_annot = args.remove_annotations
 add_ref = args.add_reference
 rem_ref = args.remove_reference
+org_id = args.id
 
 APOLLO = environ['APOLLO']
+
+path = f"{APOLLO}/ORGANISMS/{org_id}"
 
 if add_org:
 
@@ -130,30 +133,25 @@ if add_org:
 	GetOptions.add_argument("-f","--fasta",required=True)
 	GetOptions.add_argument("-g","--genus",required=True)
 	GetOptions.add_argument("-s","--species",required=True)
-	GetOptions.add_argument("-i","--id",required=True)
-	GetOptions.add_argument("-p","--data_path",required=True)
 
-	args = GetOptions.parse_args()
+	args = GetOptions.parse_known_args()[0]
 
 	fasta = args.fasta
 	genus = args.genus
 	species = args.species
-	org_id = args.id
-	path = args.data_path
 
-	run([f"{APOLLO}/web-apps/jbrowse/bin/prepare-refseqs.pl","--fasta",fasta,"--out",path])
+	path = f"{APOLLO}/ORGANISMS/{org_id}"
 
-	run(["arrow","organisms","add_organisms","--genus",genus,"--species",species,org_id,path])
+	if not isdir(path):
+		makedirs(path)
+
+	run([f"{APOLLO}/web-app/jbrowse/bin/prepare-refseqs.pl","--fasta",fasta,"--out",path])
+
+	run(["arrow","organisms","add_organism","--genus",genus,"--species",species,org_id,path])
 
 if del_org:
 
 	GetOptions = ArgumentParser()
-
-	GetOptions.add_argument("-i","--id",required=True)
-
-	args = GetOptions.parse_args()
-
-	org_id = args.id
 
 	run(["arrow","organsisms","delete_features",org_id])
 	run(["arrow","organsisms","delete_organism",org_id])
@@ -162,25 +160,15 @@ if load_annot:
 
 	GetOptions = ArgumentParser()
 
-	GetOptions.add_argument("-i","--id",required=True)
 	GetOptions.add_argument("-a","--annot",required=True)
 
-	args = GetOptions.parse_args()
+	args = GetOptions.parse_known_args()[0]
 
-	org_id = args.id
 	annot = args.annot
 
 	run(['arrow','annotations','load_gff3',org_id,annot])
 
 if rem_annot:
-
-	GetOptions = ArgumentParser()
-
-	GetOptions.add_argument("-i","--id",required=True)
-
-	args = GetOptions.parse_args()
-
-	org_id = args.id
 
 	run(['arrow','annotations','delete_features',org_id])
 
@@ -191,15 +179,13 @@ if add_ref:
 	GetOptions.add_argument("-r","--ref",required=True)
 	GetOptions.add_argument("-t","--type",required=True)
 	GetOptions.add_argument("-l","--label",required=True)
-	GetOptions.add_argument("-p","--data_path",required=True)
 	GetOptions.add_argument("-c","--color",default='blue')
 
-	args = GetOptions.parse_args()
+	args = GetOptions.parse_known_args()[0]
 
 	ref = args.ref
 	type = args.type
 	label = args.label
-	path = args.data_path
 	color = args.color
 
 	run([f'{APOLLO}/web-app/jbrowse/bin/flatfile-to-json.pl','--gff',ref,'--type',type,'--trackLabel',label,'--out',path,'subfeatureClasses',f"'{{\"match_part\":\"{color}\"}}'"])
@@ -211,9 +197,9 @@ if rem_ref:
 	GetOptions.add_argument("-l","--label",required=True)
 	GetOptions.add_argument("-p","--data_path",required=True)
 
-	args = GetOptions.parse_args()
+	args = GetOptions.parse_known_args()[0]
 
 	label = args.label
-	path = args.data_path
+	
 
 	run([f"{APOLLO}/bin/remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
