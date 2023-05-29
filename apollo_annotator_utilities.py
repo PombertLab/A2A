@@ -103,14 +103,14 @@ from os import environ
 GetOptions = ArgumentParser()
 group = GetOptions.add_mutually_exclusive_group(required=True)
 
-group.add_argument("--add_organism")
-group.add_argument("--delete_organism")
+group.add_argument("--add_organism",default=False,action='store_true')
+group.add_argument("--delete_organism",default=False,action='store_true')
 
-group.add_argument("--load_annotations")
-group.add_argument("--remove_annotations")
+group.add_argument("--load_annotations",default=False,action='store_true')
+group.add_argument("--remove_annotations",default=False,action='store_true')
 
-group.add_argument("--add_reference")
-group.add_argument("--remove_reference")
+group.add_argument("--add_reference",default=False,action='store_true')
+group.add_argument("--remove_reference",default=False,action='store_true')
 
 args = GetOptions.parse_args()
 
