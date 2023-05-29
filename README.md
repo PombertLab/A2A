@@ -1,5 +1,5 @@
-#### <b>Version: 0.2.0</b>
-#### <b>Updated: 2023-05-20</b>
+#### <b>Version: 0.2.1</b>
+#### <b>Updated: 2023-05-29</b>
 
 # A2A - Assembly to Apollo Annotations
 
@@ -161,7 +161,6 @@ apollo_annotator_utilities.py --add_organism \
 -g "Genus of organism" \
 -s "Species of organism" \
 -i "User-defined ID of organism" \
--p $APOLLO_DATA_DIR
 ```
 
 
