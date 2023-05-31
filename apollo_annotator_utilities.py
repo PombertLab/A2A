@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.2.0'
-updated = '2023-05-29'
+version = '0.2.1'
+updated = '2023-05-31'
 
 usage = f"""
 NAME		{name}
@@ -22,8 +22,7 @@ COMMAND		{name} --add_organism \\
 		 -f 50507.fasta \\
 		 -g Encephalitozoon \\
 		 -s intestinalis \\
-		 -i E_intestinalis_50507 \\
-		 -p /media/FatCat/apollo_data/E_intestinalis_50507
+		 -i E_intestinalis_50507
 
 -f (--fasta)	Assembly fasta file
 -g (--genus)	Genus
@@ -140,8 +139,6 @@ if add_org:
 	genus = args.genus
 	species = args.species
 
-	path = f"{APOLLO}/ORGANISMS/{org_id}"
-
 	if not isdir(path):
 		makedirs(path)
 
@@ -195,11 +192,9 @@ if rem_ref:
 	GetOptions = ArgumentParser()
 
 	GetOptions.add_argument("-l","--label",required=True)
-	GetOptions.add_argument("-p","--data_path",required=True)
 
 	args = GetOptions.parse_known_args()[0]
 
 	label = args.label
-	
 
 	run([f"{APOLLO}/bin/remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
