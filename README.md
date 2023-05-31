@@ -231,6 +231,7 @@ Then the reference gff can be added to Apollo for comparison purposeses, with th
 
 ```bash
 apollo_annotator_utilities.py --add_reference \
+	-i "User-defined ID of organism" \
 	-a $WORK_DIR/BLAST/<reference-name>.tblastn.6 \
 	-t match,match_part \
 	-l <track-label> \
