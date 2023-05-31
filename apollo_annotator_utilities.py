@@ -170,7 +170,7 @@ if load_annot:
 
 if rem_annot:
 
-	run(['arrow','annotations','delete_features',org_id])
+	run(["arrow","organsisms","delete_features",org_id])
 
 if add_ref:
 
