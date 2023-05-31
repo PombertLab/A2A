@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.2.1'
+version = '0.2.2'
 updated = '2023-05-31'
 
 usage = f"""
@@ -63,7 +63,7 @@ Add a Reference
 ------------------------------------------------------------------------------------------------------------------------
 
 COMMAND		{name} --add_reference \\
-		 -a E_intestinalis_50506.blast.gff \\
+		 -r E_intestinalis_50506.blast.gff \\
 		 -t match,match_part \\
 		 -l E_intestinalis_50506 \\
 		 -d -d /media/FatCat/apollo_data/E_intestinalis_50507
@@ -157,7 +157,7 @@ if load_annot:
 
 	GetOptions = ArgumentParser()
 
-	GetOptions.add_argument("-a","--annot",required=True)
+	GetOptions.add_argument("-r","--ref",required=True)
 
 	args = GetOptions.parse_known_args()[0]
 
@@ -197,4 +197,4 @@ if rem_ref:
 
 	label = args.label
 
-	run([f"{APOLLO}/bin/remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
+	run([f"{APOLLO}/web-app/jbrowse/bin//remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
