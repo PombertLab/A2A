@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'blast_to_apollo_gff.py'
-version = '0.1.0'
-updated = '2023-05-20'
+version = '0.2.0'
+updated = '2023-05-31'
 
 usage = f"""
 NAME		{name}
@@ -81,6 +81,8 @@ for line in BLAST:
 	
 	GFF3.write(f"{target}\t{ext}\tmatch_part\t{tstart}\t{tend}\t{evalue}\t{strand}\t.\t")
 	GFF3.write(f"gene_id=hit_{match_num};Parent=hit_{match_num};transcript_id=hit_{match_num}.t1;Note={query}:{product}\n")
+
+	match_num += 1
 
 BLAST.close()
 GFF3.close()
