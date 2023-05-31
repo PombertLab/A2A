@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 name = 'blast_to_apollo_gff.py'
-version = '0.2.0'
+version = '0.2.1'
 updated = '2023-05-31'
 
 usage = f"""
@@ -77,7 +77,7 @@ for line in BLAST:
 		product = products[query]
 
 	GFF3.write(f"{target}\t{ext}\tmatch\t{tstart}\t{tend}\t{evalue}\t{strand}\t.\t")
-	GFF3.write(f"ID=hit_{match_num};Name=hit_{match_num};Note={query}:{product}\n")
+	GFF3.write(f"ID=hit_{match_num};Name={query}:{product};Note={query}:{product}\n")
 	
 	GFF3.write(f"{target}\t{ext}\tmatch_part\t{tstart}\t{tend}\t{evalue}\t{strand}\t.\t")
 	GFF3.write(f"gene_id=hit_{match_num};Parent=hit_{match_num};transcript_id=hit_{match_num}.t1;Note={query}:{product}\n")
