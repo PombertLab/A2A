@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.2.2'
-updated = '2023-05-31'
+version = '0.2.3'
+updated = '2023-06-08'
 
 usage = f"""
 NAME		{name}
@@ -157,7 +157,7 @@ if load_annot:
 
 	GetOptions = ArgumentParser()
 
-	GetOptions.add_argument("-r","--ref",required=True)
+	GetOptions.add_argument("-a","--annot",required=True)
 
 	args = GetOptions.parse_known_args()[0]
 
@@ -185,7 +185,7 @@ if add_ref:
 	label = args.label
 	color = args.color
 
-	run([f'{APOLLO}/web-app/jbrowse/bin/flatfile-to-json.pl','--gff',ref,'--type',type,'--trackLabel',label,'--out',path,'subfeatureClasses',f"'{{\"match_part\":\"{color}\"}}'"])
+	run([f'{APOLLO}/web-app/jbrowse/bin/flatfile-to-json.pl','--gff',ref,'--type',type,'--trackLabel',label,'--out',path])#,'--subfeatureClasses',f"{{\"match_part\":\"{color}\"}}"])
 
 if rem_ref:
 
