@@ -142,7 +142,12 @@ There are several steps to setting up the Apollo enviroment for the annotation p
 - create and load predicted genes to Apollo as annotations
 - create and load evidence based annotations using sequence homology searches on references
 
-This pipeline utilizes the [Apollo API](https://github.com/galaxy-genome-annotation/python-apollo), a handy python intermediate for communicating with the Apollo backend. Before moving through the following steps, be sure to initiallize the arrow CLI tool by running `arrow init`. You will be prompted to sign in so arrow can access your Apollo account. <b><i>BE AWARE, this will store your username and password in a plain text file in your home directory (~/.apollo-arrow.yml)!</i></b>
+This pipeline utilizes the [Apollo API](https://github.com/galaxy-genome-annotation/python-apollo), a handy python intermediate for communicating with the Apollo backend. 
+Before moving through the following steps, be sure to initiallize the arrow CLI tool by running:
+```bash
+arrow init
+```
+You will be prompted to sign in so arrow can access your Apollo account. <b><i>BE AWARE, this will store your username and password in a plain text file in your home directory (~/.apollo-arrow.yml)!</i></b>
 
 
 #### <b>Creating an Organism</b>
