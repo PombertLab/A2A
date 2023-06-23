@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.2.3'
-updated = '2023-06-08'
+version = '0.2.4'
+updated = '2023-06-21'
 
 usage = f"""
 NAME		{name}
@@ -150,8 +150,8 @@ if del_org:
 
 	GetOptions = ArgumentParser()
 
-	run(["arrow","organsisms","delete_features",org_id])
-	run(["arrow","organsisms","delete_organism",org_id])
+	run(["arrow","organisms","delete_features",org_id])
+	run(["arrow","organisms","delete_organism",org_id])
 
 if load_annot:
 

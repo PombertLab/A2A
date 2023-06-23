@@ -1,5 +1,5 @@
-#### <b>Version: 0.2.1</b>
-#### <b>Updated: 2023-05-29</b>
+#### <b>Version: 0.2.2</b>
+#### <b>Updated: 2023-06-23</b>
 
 # A2A - Assembly to Apollo Annotations
 
@@ -188,14 +188,14 @@ Apollo requires the mRNA/exon feature to add predictions as annotations, which i
 
 ```bash
 prodigal_to_apollo_gff.py \
-	-g $WORK_DIR/proteins.gff
+	-g $WORK_DIR/<assembly-name>.gff
 ```
 
 Not all gene predictions will be accurate, however, and smaller genes can be spurious. Separating genes by size, we can create annotations from the larger genes automatically, and add the smaller genes when evidence supports them, saving time. To parse the smaller genes from the larger ones, the following command can be used:
 
 ```bash
 size_sort_gff.py \
-	-g $WORK_DIR/proteins.apollo.gff \
+	-g $WORK_DIR/<assembly-name>.apollo.gff \
 	-a 60
 	-o $SIZE_SORT_DIR
 ```
