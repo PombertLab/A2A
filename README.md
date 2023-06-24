@@ -161,11 +161,12 @@ export APOLLO=/path/to/Apollo
 To add annotations to your organism, you will first need to create an instance of it on Apollo:
 
 ```bash
-apollo_annotator_utilities.py --add_organism \
--f $WORK_DIR/<assembly-name>/<assembly-name>.oriented.fasta \
--g "Genus of organism" \
--s "Species of organism" \
--i "User-defined ID of organism" \
+apollo_annotator_utilities.py \
+  --add_organism \
+	-f $WORK_DIR/<assembly-name>/<assembly-name>.oriented.fasta \
+	-g "Genus of organism" \
+	-s "Species of organism" \
+	-i "User-defined ID of organism"
 ```
 
 
@@ -203,7 +204,8 @@ size_sort_gff.py \
 The gff file can then be uploaded as user-loaded annotations:
 
 ```bash
-apollo_annotator_utilities.py --load_annotations \
+apollo_annotator_utilities.py \
+  --load_annotations \
 	-i "User-defined ID of organism" \
 	-a $SIZE_SORT_DIR/proteins.long.gff
 ```
@@ -235,7 +237,8 @@ blast_to_apollo_gff.py \
 Then the reference gff can be added to Apollo for comparison purposeses, with the following command:
 
 ```bash
-apollo_annotator_utilities.py --add_reference \
+apollo_annotator_utilities.py \
+  --add_reference \
 	-i "User-defined ID of organism" \
 	-r $WORK_DIR/BLAST/<reference-name>.tblastn.6 \
 	-t match,match_part \
