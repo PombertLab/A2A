@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 name = 'apollo_annotator_utilities.py'
-version = '0.2.4'
-updated = '2023-06-21'
+version = '0.3.0'
+updated = '2023-06-24'
 
 usage = f"""
 NAME		{name}
@@ -74,14 +74,26 @@ COMMAND		{name} --add_reference \\
 -c (--color)	Track color
 
 ------------------------------------------------------------------------------------------------------------------------
-Remove a Reference
+Remove a Track
 ------------------------------------------------------------------------------------------------------------------------
 
-COMMAND		{name} --remove_reference \\
+COMMAND		{name} --remove_track \\
 		 -l E_intestinalis_50506 \\
 		 -d /media/FatCat/apollo_data/E_intestinalis_50507
 
--l (--label)	Reference label
+-l (--label)	Track label
+
+------------------------------------------------------------------------------------------------------------------------
+Upload BAM file
+------------------------------------------------------------------------------------------------------------------------
+
+COMMAND		{name} --add_bam \\
+
+-b (--bam)	BAM file
+-l (--label)	BAM label
+-t (--type)	Track type (alignment or coverage) [Default: alignment]
+-n (--min_cov)	Minimum coverage (Applicable if --type coverage) [Default: 0]
+-x (--max_cov)	Maximum coverage (Applicable if --type coverage) [Default: 50]
 
 ------------------------------------------------------------------------------------------------------------------------
 """
@@ -95,7 +107,8 @@ if len(argv) < 2:
 from argparse import ArgumentParser
 from subprocess import run
 from os import environ, makedirs
-from os.path import isdir
+from os.path import isdir, dirname, isfile, basename
+from shutil import copy
 
 GetOptions = ArgumentParser()
 group = GetOptions.add_mutually_exclusive_group(required=True)
@@ -107,7 +120,10 @@ group.add_argument("--load_annotations",default=False,action='store_true')
 group.add_argument("--remove_annotations",default=False,action='store_true')
 
 group.add_argument("--add_reference",default=False,action='store_true')
-group.add_argument("--remove_reference",default=False,action='store_true')
+
+group.add_argument("--remove_track",default=False,action='store_true')
+
+group.add_argument("--add_bam",default=False,action='store_true')
 
 GetOptions.add_argument("-i","--id",required=True)
 
@@ -118,7 +134,8 @@ del_org = args.delete_organism
 load_annot = args.load_annotations
 rem_annot = args.remove_annotations
 add_ref = args.add_reference
-rem_ref = args.remove_reference
+rem_ref = args.remove_track
+add_bam = args.add_bam
 org_id = args.id
 
 APOLLO = environ['APOLLO']
@@ -167,7 +184,7 @@ if load_annot:
 
 if rem_annot:
 
-	run(["arrow","organsisms","delete_features",org_id])
+	run(["arrow","organisms","delete_features",org_id])
 
 if add_ref:
 
@@ -197,4 +214,55 @@ if rem_ref:
 
 	label = args.label
 
-	run([f"{APOLLO}/web-app/jbrowse/bin//remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
+	run([f"{APOLLO}/web-app/jbrowse/bin/remove-track.pl",'--trackLabel',label,'--delete','--dir',path])
+
+if add_bam:
+
+	GetOptions = ArgumentParser()
+	
+	GetOptions.add_argument("-b","--bam",required=True)
+	GetOptions.add_argument("-l","--label",required=True)
+	GetOptions.add_argument("-c","--coverage",default=False,action='store_true')
+
+	args = GetOptions.parse_known_args()[0]
+	
+	bam = args.bam
+	label = args.label
+	coverage = args.coverage
+
+	bam_name = basename(bam)
+	bam_path = dirname(bam)
+	if bam_path == "":
+		bam_path = "."
+
+	
+	if not isfile(f"{bam_path}/{bam_name}.bai"):
+		print(f"  [E] Could not find the index file ({bam_name}.bai) for the provided bam file ({bam})")
+
+	copy(bam,f"{path}/")
+	copy(f"{bam_path}/{bam_name}.bai",f"{path}/")
+
+	if coverage:
+	
+		GetOptions.add_argument("-n","--minimum",type=int,default=0)
+		GetOptions.add_argument("-x","--maximum",type=int,default=500)
+
+		args = GetOptions.parse_known_args()[0]
+
+		minimum = args.minimum
+		maximum = args.maximum
+		
+		run([f"{APOLLO}/web-app/jbrowse/bin/add-bam-track.pl",
+				"--in", f"{path}/trackList.json",
+				"--bam_url", f"{bam_name}",
+				"--label", f"{label}",
+				"--coverage",
+				"--min_score", f"{minimum}",
+				"--max_score", f"{maximum}"])
+
+	else:
+
+		run([f"{APOLLO}/web-app/jbrowse/bin/add-bam-track.pl",
+				"--in", f"{path}/trackList.json",
+				"--bam_url", f"{bam_name}",
+				"--label", f"{label}"])
